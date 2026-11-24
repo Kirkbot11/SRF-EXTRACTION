@@ -37,29 +37,35 @@ ALL_COLUMNS = [
 LABEL_SUBSTRINGS = [
     "total ground space", "total epa", "total dc power", "existing loadings",
     "proposed loadings", "no. of", "smart equipment", "additional equipment",
-    "smart declared", "site proposal", "smart site", "tower co.", "latitude:",
+    "smart declared", "declared design capacity", "smart site", "tower co.", "latitude:",
     "longitude:", "site type", "tower type", "tower height", "building height",
-    "transmission solution", "access antenna", "transmission antenna", "transmission rack",
+    "site classification", "transmission solution", "access antenna", "transmission antenna", "transmission rack",
     "floor space", "equipment/cabinet", "olt dimension", "power requirement",
     "cooling requirement", "space requirement", "other requirement", "project implementation",
     "document revision", "site request form", "infrastructure details", "infrastructure",
     "general site information", "fixed / wireless approvals", "reviewed by", "approver 1",
-    "approver signature", "approver name", "approver date", "dismantling", "equipment for dismantling"
+    "approver signature", "approver name", "approver date", "equipment for dismantling",
+    "site proposal date", "site proposal type"
 ]
 
 SECTION_REGEXES = [
     r"^[A-Z]\.\s+.*",
-    r"^\b(?:INFRASTRUCTURE|GENERAL|POWER|OTHER|PROJECT|TIMELINE|FIXED|REVIEWED|APPROVALS|DISMANTLING|ADDITIONAL|LOADINGS)\b",
+    r"^\b(?:EQUIPMENT\s+FOR\s+DISMANTLING|ADDITIONAL\s+EQUIPMENT|SMART\s+DECLARED|FIXED\s*/\s*WIRELESS\s+APPROVALS|REVIEWED\s+BY)\b",
     r".*\bINFRASTRUCTURE\s+DETAILS\b.*"
 ]
 
-def clean_val(v):
+def clean_val(v, field_name=None):
     if v is None:
         return ""
     v = str(v).strip()
     if not v or v == "" or v.endswith(":"):
         return ""
     v_low = v.lower()
+
+    if field_name == "Site Proposal Type":
+        if v_low in ["site proposal type", "site proposal date", "site classification", "tower co. name"]:
+            return ""
+
     for ls in LABEL_SUBSTRINGS:
         if ls in v_low:
             return ""
@@ -171,8 +177,8 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
 
     # Standard Regex Patterns for other fields
     patterns = {
-        "Site Proposal Date": r"Site Proposal Date:\s*\n?\s*([^\r\n]+)",
-        "Site Proposal Type": r"Site Proposal Type:\s*\n?\s*([^\r\n]+)",
+        "Site Proposal Date": r"Site Proposal Date:?\s*\n?\s*([^\r\n]+)",
+        "Site Proposal Type": r"Site Proposal Type:?\s*\n?\s*([^\r\n]+)",
         "Site Classification": r"Site Classification \(Uptime SLA\):\s*\n?\s*([^\r\n]+)",
         "Tower Company Name": r"Tower Co\. Name:\s*\n?\s*([^\r\n]+)",
         "Site ID": r"Smart Site ID:\s*\n?\s*([^\r\n]+)",
@@ -210,7 +216,7 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
     for k, pat in patterns.items():
         m = re.search(pat, full_text, re.IGNORECASE)
         if m:
-            row[k] = clean_val(m.group(1))
+            row[k] = clean_val(m.group(1), field_name=k)
 
     # Clean RF Antenna Weight if it accidentally caught Existing Loading text
     if row["RF Antenna Weight"] == row["Existing Loadings Description"]:
@@ -443,56 +449,4 @@ def append_to_daily_excel(records, excel_path=None):
     ws = wb.active
 
     headers = [cell.value for cell in ws[1]]
-    ref_col_idx = headers.index("Reference Number") + 1 if "Reference Number" in headers else None
-    file_col_idx = headers.index("Filename") + 1 if "Filename" in headers else None
-
-    existing_identifiers = set()
-    for row in range(2, ws.max_row + 1):
-        ref_val = ws.cell(row=row, column=ref_col_idx).value if ref_col_idx else None
-        file_val = ws.cell(row=row, column=file_col_idx).value if file_col_idx else None
-        if ref_val and str(ref_val).strip():
-            existing_identifiers.add(str(ref_val).strip().lower())
-        elif file_val and str(file_val).strip():
-            existing_identifiers.add(str(file_val).strip().lower())
-
-    added_count = 0
-    skipped_count = 0
-    current_row = ws.max_row + 1
-
-    for record in records:
-        rec_ref = record.get("Reference Number", "").strip().lower()
-        rec_file = record.get("Filename", "").strip().lower()
-        
-        if (rec_ref and rec_ref in existing_identifiers) or \
-           (rec_file and rec_file in existing_identifiers):
-            skipped_count += 1
-            continue
-
-        _apply_row_style(ws, current_row, record)
-        if rec_ref:
-            existing_identifiers.add(rec_ref)
-        if rec_file:
-            existing_identifiers.add(rec_file)
-        
-        current_row += 1
-        added_count += 1
-
-    wb.save(excel_path)
-    total_in_file = ws.max_row - 1
-
-    return {
-        "status": "appended",
-        "added": added_count,
-        "skipped": skipped_count,
-        "total": total_in_file,
-        "excel_path": excel_path
-    }
-
-def load_daily_dataframe(excel_path=None):
-    if excel_path is None:
-        excel_path = get_daily_excel_path()
-    if not os.path.exists(excel_path):
-        return pd.DataFrame()
-    df = pd.read_excel(excel_path, keep_default_na=False)
-    # Ensure NaN or None are empty strings
-    return df.fillna("")
+    ref_col_idx = headers.index("Reference Number") + 1 if
