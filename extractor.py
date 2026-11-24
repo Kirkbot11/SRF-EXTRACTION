@@ -387,10 +387,11 @@ def create_styled_workbook(records, output_path):
     ws.views.sheetView[0].showGridLines = True
 
     header_font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
-    primary_header_fill = PatternFill(start_color="104E8B", end_color="104E8B", fill_type="solid")
-    secondary_header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
-    accent_header_fill = PatternFill(start_color="0F766E", end_color="0F766E", fill_type="solid")
-    approval_header_fill = PatternFill(start_color="4338CA", end_color="4338CA", fill_type="solid")
+    # Frontier Tower Associates Philippines (FTAP) Brand Color Fills
+    primary_header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")     # Frontier Crimson Red
+    secondary_header_fill = PatternFill(start_color="1F2428", end_color="1F2428", fill_type="solid")   # Frontier Corporate Charcoal
+    accent_header_fill = PatternFill(start_color="F15A2A", end_color="F15A2A", fill_type="solid")      # Frontier Orange Accent
+    approval_header_fill = PatternFill(start_color="9E0000", end_color="9E0000", fill_type="solid")    # Frontier Deep Crimson Approval
 
     thin_border = Border(
         left=Side(style='thin', color='CBD5E1'),

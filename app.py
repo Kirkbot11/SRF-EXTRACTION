@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import io
+import base64
 import datetime
 import pandas as pd
 from extractor import (
@@ -9,59 +10,117 @@ from extractor import (
     ALL_COLUMNS
 )
 
-# Page Configuration
+# Base Paths & Asset Helpers
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+
+def get_base64_image(filename):
+    p = os.path.join(ASSETS_DIR, filename)
+    if os.path.exists(p):
+        with open(p, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    return ""
+
+header_logo_b64 = get_base64_image("ftap_header_logo.png")
+icon_logo_b64 = get_base64_image("ftap_logo_only.png")
+icon_file_path = os.path.join(ASSETS_DIR, "ftap_logo_only.png")
+
+# Page Configuration with FTAP Favicon
 st.set_page_config(
-    page_title="PDF Site Extractor",
-    page_icon="📋",
+    page_title="Frontier Towers Philippines - SRF Extractor",
+    page_icon=icon_file_path if os.path.exists(icon_file_path) else "🗼",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Refined styling: Soft darker background + 3D floating cards with rich shadows
+# Frontier Towers Philippines (FTAP) Official Brand Styling
 st.markdown("""
 <style>
-    /* Darker, softer canvas background - eliminates harsh white glare */
+    /* Clean, soft executive canvas - eliminates white glare while maintaining corporate precision */
     .stApp {
-        background-color: #E6EAF0 !important;
-        color: #0F172A !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #F4F6F9 !important;
+        color: #1F2029 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Gibson", "Roboto", "Segoe UI", Helvetica, Arial, sans-serif;
     }
 
-    /* Headings - Crisp Dark Navy */
+    /* Headings - Frontier Executive Slate / Charcoal */
     h1, h2, h3, h4, h5, h6 {
-        color: #0F172A !important;
+        color: #1F2029 !important;
         font-weight: 700 !important;
     }
 
-    /* Paragraphs and general text */
     p, span, label, div {
-        color: #1E293B;
+        color: #334155;
     }
 
-    /* Header Banner */
-    .header-box {
-        background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 100%);
-        padding: 24px 28px;
+    /* FTAP Top Header Card */
+    .ftap-header-box {
+        background-color: #FFFFFF;
         border-radius: 16px;
-        color: #FFFFFF !important;
-        margin-bottom: 24px;
-        box-shadow: 0 10px 25px -4px rgba(30, 58, 138, 0.25);
+        padding: 22px 28px;
+        margin-bottom: 22px;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+        position: relative;
+        overflow: hidden;
     }
-    .header-box h1 {
-        color: #FFFFFF !important;
-        font-size: 26px !important;
+    .ftap-header-box::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #C00000 0%, #D81E2E 60%, #F15A2A 100%);
+    }
+    .ftap-header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .ftap-brand-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .ftap-logo-img {
+        height: 58px;
+        width: auto;
+        max-width: 240px;
+        object-fit: contain;
+    }
+    .ftap-title-block h1 {
+        color: #1F2029 !important;
+        font-size: 24px !important;
         font-weight: 800 !important;
         margin: 0 !important;
-        padding-bottom: 6px !important;
+        padding-bottom: 4px !important;
+        letter-spacing: -0.3px;
     }
-    .header-box p {
-        color: #E2E8F0 !important;
-        font-size: 15px !important;
+    .ftap-title-block p {
+        color: #64748B !important;
+        font-size: 14px !important;
         font-weight: 500 !important;
         margin: 0 !important;
     }
+    .ftap-badge-enterprise {
+        background: #FFF1F1;
+        color: #C00000;
+        border: 1px solid #FED7D7;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
 
-    /* Ensure all 4 metric columns stretch and align perfectly */
+    /* Metric Columns Layout */
     div[data-testid="stHorizontalBlock"] {
         align-items: stretch !important;
     }
@@ -71,14 +130,15 @@ st.markdown("""
         justify-content: stretch !important;
     }
 
-    /* Metric Cards - 3D Floating Style with Uniform Equal Height & Baseline */
+    /* FTAP Metric Cards */
     .metric-card {
         background-color: #FFFFFF !important;
-        border: 1px solid #CBD5E1 !important;
+        border: 1px solid #E2E8F0 !important;
+        border-top: 3px solid #C00000 !important;
         border-radius: 14px !important;
         padding: 12px 10px !important;
         text-align: center !important;
-        box-shadow: 0 8px 20px -3px rgba(15, 23, 42, 0.12), 0 4px 8px -2px rgba(15, 23, 42, 0.06) !important;
+        box-shadow: 0 6px 18px -3px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04) !important;
         height: 120px !important;
         min-height: 120px !important;
         max-height: 120px !important;
@@ -88,11 +148,16 @@ st.markdown("""
         justify-content: center !important;
         align-items: center !important;
         box-sizing: border-box !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px -4px rgba(192, 0, 0, 0.12), 0 4px 8px -2px rgba(15, 23, 42, 0.06) !important;
     }
     .metric-value {
         font-size: 23px !important;
         font-weight: 800 !important;
-        color: #1E3A8A !important;
+        color: #1F2029 !important;
         line-height: 1.15 !important;
         height: 48px !important;
         min-height: 48px !important;
@@ -106,10 +171,10 @@ st.markdown("""
     }
     .metric-label {
         font-size: 11px !important;
-        color: #475569 !important;
+        color: #64748B !important;
         text-transform: uppercase !important;
         font-weight: 700 !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.4px !important;
         height: 36px !important;
         min-height: 36px !important;
         max-height: 36px !important;
@@ -122,50 +187,51 @@ st.markdown("""
         padding: 0 4px !important;
     }
 
-    /* Step 1 Card - Floating Clean White */
+    /* Step 1 Card */
     .step1-card {
         background-color: #FFFFFF !important;
         border-radius: 16px !important;
         padding: 24px !important;
-        margin-bottom: 24px !important;
-        border: 1px solid #CBD5E1 !important;
-        box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.06) !important;
+        margin-bottom: 22px !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: 0 8px 22px -4px rgba(15, 23, 42, 0.08) !important;
     }
 
-    /* Verification Card Styling */
+    /* Verification Card */
     .verify-card {
         background-color: #FFFFFF !important;
         border-radius: 16px !important;
         padding: 22px 24px !important;
         margin-top: 18px !important;
         margin-bottom: 22px !important;
-        border: 2px solid #60A5FA !important;
-        box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.15) !important;
+        border: 2px solid #C00000 !important;
+        box-shadow: 0 10px 24px -4px rgba(192, 0, 0, 0.12) !important;
     }
 
-    /* STEP 2 - Highlighted 3D Floating Card with Rich Shadow */
+    /* Step 2 Floating Container */
     .step2-floating-container {
         background-color: #FFFFFF !important;
         border-radius: 18px !important;
         padding: 26px !important;
         margin-top: 24px !important;
         margin-bottom: 28px !important;
-        border: 2px solid #93C5FD !important;
-        box-shadow: 0 20px 40px -8px rgba(30, 58, 138, 0.2), 0 10px 20px -4px rgba(15, 23, 42, 0.1) !important;
+        border: 2px solid #E2E8F0 !important;
+        border-left: 6px solid #C00000 !important;
+        box-shadow: 0 16px 36px -6px rgba(192, 0, 0, 0.1), 0 8px 16px -4px rgba(15, 23, 42, 0.05) !important;
     }
 
-    /* Floating Step Badges */
+    /* FTAP Step Badges */
     .step-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #2563EB;
+        background: #C00000;
         color: #FFFFFF !important;
         font-weight: 800;
         font-size: 13px;
-        padding: 4px 14px;
+        padding: 5px 14px;
         border-radius: 20px;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+        box-shadow: 0 4px 10px rgba(192, 0, 0, 0.28);
         letter-spacing: 0.5px;
     }
     .step-badge-ready {
@@ -173,42 +239,97 @@ st.markdown("""
         color: #FFFFFF !important;
         font-weight: 700;
         font-size: 13px;
-        padding: 4px 12px;
+        padding: 5px 14px;
         border-radius: 20px;
-        box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+        box-shadow: 0 3px 8px rgba(22, 163, 74, 0.25);
     }
 
-    /* File Uploader Dropzone Enhancement */
+    /* File Uploader Dropzone Enhancement (FTAP Crimson Accents) */
     [data-testid="stFileUploader"] {
         background-color: #FFFFFF !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
     }
     [data-testid="stFileUploaderDropzone"] {
-        border: 2px dashed #2563EB !important;
-        background-color: #F0F7FF !important;
-        border-radius: 12px !important;
-        padding: 24px !important;
+        border: 2px dashed #C00000 !important;
+        background-color: #FFF8F8 !important;
+        border-radius: 14px !important;
+        padding: 26px !important;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    [data-testid="stFileUploaderDropzone"]:hover {
+        background-color: #FFF0F0 !important;
+        border-color: #9E0000 !important;
     }
     [data-testid="stFileUploaderDropzone"] span {
-        color: #1E3A8A !important;
+        color: #C00000 !important;
         font-weight: 700 !important;
     }
     [data-testid="stFileUploaderDropzone"] small {
-        color: #475569 !important;
+        color: #64748B !important;
         font-weight: 500 !important;
     }
 
-    /* Sidebar Contrast & Styling */
+    /* Primary & Secondary Buttons Overrides (FTAP Brand Red) */
+    div.stButton > button[kind="primary"],
+    div[data-testid="stDownloadButton"] > button[kind="primary"] {
+        background: linear-gradient(135deg, #C00000 0%, #A00000 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 10px 24px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        box-shadow: 0 4px 14px rgba(192, 0, 0, 0.35) !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    div.stButton > button[kind="primary"]:hover,
+    div[data-testid="stDownloadButton"] > button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #D41525 0%, #B30000 100%) !important;
+        box-shadow: 0 6px 18px rgba(192, 0, 0, 0.45) !important;
+        transform: translateY(-1px);
+    }
+
+    div.stButton > button[kind="secondary"],
+    div[data-testid="stDownloadButton"] > button[kind="secondary"] {
+        border: 1px solid #CBD5E1 !important;
+        background-color: #FFFFFF !important;
+        color: #334155 !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }
+    div.stButton > button[kind="secondary"]:hover,
+    div[data-testid="stDownloadButton"] > button[kind="secondary"]:hover {
+        border-color: #C00000 !important;
+        color: #C00000 !important;
+        background-color: #FFF5F5 !important;
+    }
+
+    /* Sidebar Styling */
     [data-testid="stSidebar"] {
-        background-color: #DCE3ED !important;
-        border-right: 1px solid #CBD5E1 !important;
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E2E8F0 !important;
     }
-    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
-        color: #0F172A !important;
+    .ftap-sidebar-card {
+        background: #F8FAFC;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid #E2E8F0;
+        margin-bottom: 16px;
+        text-align: center;
     }
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
-        color: #1E293B !important;
-        font-weight: 500 !important;
+    .ftap-sidebar-logo {
+        max-width: 190px;
+        height: auto;
+        margin-bottom: 10px;
+    }
+    .ftap-sidebar-tag {
+        font-size: 11px;
+        font-weight: 700;
+        color: #C00000;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -217,24 +338,42 @@ st.markdown("""
 today_obj = datetime.date.today()
 today_str = today_obj.strftime("%Y-%m-%d")
 today_readable = today_obj.strftime("%A, %B %d, %Y")
-default_download_name = f"Site_Requests_{today_str}.xlsx"
+default_download_name = f"FTAP_Site_Requests_{today_str}.xlsx"
 
 # Initialize In-Memory Staging Session State (Strictly in RAM)
 if "staged_records" not in st.session_state:
     st.session_state.staged_records = {}  # filename -> record dict
 
-# Sidebar - Minimal, Clean & Helpful
+# Sidebar - Frontier Towers Philippines Branded
 with st.sidebar:
-    st.markdown("### 📋 PDF Extractor")
-    st.markdown(f"**Extracts all {len(ALL_COLUMNS)} standard fields directly to Excel.**")
-    st.caption("100% in-browser processing. No files saved to your disk.")
+    # Sidebar Logo & Branding Block
+    if header_logo_b64:
+        st.markdown(f"""
+        <div class="ftap-sidebar-card">
+            <img src="data:image/png;base64,{header_logo_b64}" class="ftap-sidebar-logo" alt="Frontier Towers Philippines" />
+            <div class="ftap-sidebar-tag">Enterprise Extraction Portal</div>
+        </div>
+        """, unsafe_allow_html=True)
+    elif icon_logo_b64:
+        st.markdown(f"""
+        <div class="ftap-sidebar-card">
+            <img src="data:image/png;base64,{icon_logo_b64}" style="max-height: 48px; width: auto; margin-bottom: 6px;" alt="FTAP Logo" />
+            <div style="font-weight: 800; color: #1F2029; font-size: 15px;">FRONTIER TOWERS</div>
+            <div class="ftap-sidebar-tag">Philippines</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("### 🗼 Frontier Towers Philippines")
+
+    st.markdown(f"**Automated SRF Extractor** extracts all **{len(ALL_COLUMNS)} standard telecom fields** directly into formatted Excel.")
+    st.caption("🔒 100% in-browser processing. Zero data stored on disk.")
     
     st.markdown("---")
     st.markdown(f"**📅 Date:** {today_readable}")
     
     staged_total = len(st.session_state.staged_records)
     if staged_total > 0:
-        st.markdown(f"**📥 Extracted Files:** `{staged_total}` ready")
+        st.markdown(f"**📥 Extracted Files:** <span style='color: #C00000; font-weight: 800;'>{staged_total} ready</span>", unsafe_allow_html=True)
         records_list = list(st.session_state.staged_records.values())
         excel_bytes = generate_excel_bytes(records_list)
         st.download_button(
@@ -252,20 +391,37 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 💡 Quick Instructions")
     st.markdown("""
-    1. **Upload**: Drag & drop your PDF Site Request Forms into Step 1.
-    2. **Review**: Check the extracted fields in the Step 2 table below.
-    3. **Download**: Click **Download Extracted Excel** to get your file.
+    1. **Upload**: Drag & drop incoming Site Request Form (SRF) PDFs in **Step 1**.
+    2. **Verify & Extract**: Confirm file list and extract all 101 fields into memory.
+    3. **Download**: Review in **Step 2** and click **Download Extracted Excel File**.
     """)
+    st.caption("Frontier Tower Associates Philippines (FTAP)")
 
-# Main Content Header Banner
+# Main Content Header Banner (FTAP Corporate Branding)
+logo_html = ""
+if header_logo_b64:
+    logo_html = f'<img src="data:image/png;base64,{header_logo_b64}" class="ftap-logo-img" alt="Frontier Towers Philippines Logo" />'
+elif icon_logo_b64:
+    logo_html = f'<img src="data:image/png;base64,{icon_logo_b64}" style="height: 52px; width: auto;" alt="FTAP Logo" />'
+
 st.markdown(f"""
-<div class="header-box">
-    <h1>📋 Automated PDF Site Request Extractor</h1>
-    <p>Upload incoming PDFs, review the extracted fields in memory, and download your completed Excel spreadsheet directly.</p>
+<div class="ftap-header-box">
+    <div class="ftap-header-content">
+        <div class="ftap-brand-left">
+            {logo_html}
+            <div class="ftap-title-block">
+                <h1>Automated Site Request Form (SRF) Extractor</h1>
+                <p>Frontier Tower Associates Philippines • Operations & Engineering Infrastructure</p>
+            </div>
+        </div>
+        <div class="ftap-badge-enterprise">
+            <span>🗼</span> FTAP Enterprise Suite
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Metrics Summary Row (All 4 cards 100% equal size and aligned)
+# Metrics Summary Row
 staged_count = len(st.session_state.staged_records)
 status_text = "READY" if staged_count > 0 else "WAITING"
 status_color = "#16A34A" if staged_count > 0 else "#64748B"
@@ -282,7 +438,7 @@ with col_m1:
 with col_m2:
     st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-value" style="color: {'#1E3A8A' if staged_count > 0 else '#64748B'};">{staged_count}</div>
+        <div class="metric-value" style="color: {'#C00000' if staged_count > 0 else '#64748B'};">{staged_count}</div>
         <div class="metric-label">📄 Extracted PDFs</div>
     </div>
     """, unsafe_allow_html=True)
@@ -290,7 +446,7 @@ with col_m2:
 with col_m3:
     st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-value">{len(ALL_COLUMNS)}</div>
+        <div class="metric-value" style="color: #C00000;">{len(ALL_COLUMNS)}</div>
         <div class="metric-label">📑 Standard Fields</div>
     </div>
     """, unsafe_allow_html=True)
@@ -310,10 +466,10 @@ st.markdown("""
 <div class="step1-card">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
         <span class="step-badge">STEP 1</span>
-        <span style="font-size: 19px; font-weight: 800; color: #0F172A;">Upload Incoming PDFs</span>
+        <span style="font-size: 19px; font-weight: 800; color: #1F2029;">Upload Incoming Site Request Forms</span>
     </div>
-    <p style="color: #475569; font-size: 14px; margin-top: 0; margin-bottom: 14px;">
-        Drag & drop 1 file or multiple Site Request Form (SRF) PDFs below. You can verify the file names before proceeding with extraction.
+    <p style="color: #64748B; font-size: 14px; margin-top: 0; margin-bottom: 14px;">
+        Drag & drop one or multiple SRF PDF documents below. You can verify document names and file sizes before initiating the automated extraction.
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -334,14 +490,14 @@ if uploaded_files:
         <div class="verify-card">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="background: #2563EB; color: white; padding: 4px 12px; border-radius: 14px; font-weight: 800; font-size: 12px;">VERIFICATION</span>
-                    <span style="font-weight: 800; font-size: 18px; color: #0F172A;">Verify Uploaded Files Before Extraction</span>
+                    <span style="background: #C00000; color: white; padding: 4px 12px; border-radius: 14px; font-weight: 800; font-size: 12px;">VERIFICATION</span>
+                    <span style="font-weight: 800; font-size: 18px; color: #1F2029;">Verify Uploaded Files Before Extraction</span>
                 </div>
-                <span style="background: #EFF6FF; color: #1D4ED8; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 12px; border: 1px solid #BFDBFE;">
+                <span style="background: #FFF1F1; color: #C00000; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 12px; border: 1px solid #FED7D7;">
                     {len(unextracted_files)} File{'s' if len(unextracted_files) > 1 else ''} Ready
                 </span>
             </div>
-            <p style="color: #475569; font-size: 14px; margin: 0 0 14px 0; font-weight: 500;">
+            <p style="color: #64748B; font-size: 14px; margin: 0 0 14px 0; font-weight: 500;">
                 Review the uploaded files below. When you are ready, click <b>Proceed with Extraction</b> to extract all 101 fields into memory.
             </p>
         </div>
@@ -381,7 +537,7 @@ if uploaded_files:
             st.toast(f"Extracted {len(unextracted_files)} PDF(s) successfully!", icon="✅")
             st.rerun()
     else:
-        st.caption("✓ All selected files have been extracted below. Drop more files above if you have more incoming PDFs.")
+        st.caption("✓ All selected files have been extracted below. Drop more files above if you have additional incoming SRFs.")
 
 # STEP 2 FLOATING CARD (Direct Download from Extracted Data)
 if st.session_state.staged_records:
@@ -393,14 +549,14 @@ if st.session_state.staged_records:
     <div class="step2-floating-container">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="step-badge" style="background: #1D4ED8; font-size: 14px; padding: 6px 16px;">STEP 2</span>
-                <span style="font-size: 21px; font-weight: 800; color: #0F172A;">Extracted Data</span>
+                <span class="step-badge" style="background: #C00000; font-size: 14px; padding: 6px 16px;">STEP 2</span>
+                <span style="font-size: 21px; font-weight: 800; color: #1F2029;">Extracted Data Preview</span>
             </div>
             <span class="step-badge-ready">✓ {rec_count} Record(s) Extracted & Ready</span>
         </div>
-        <p style="color: #334155; font-size: 14px; margin-top: 0; margin-bottom: 16px; font-weight: 500;">
-            Review the extracted fields in the table below. When ready, click the blue 
-            <b style="color: #1D4ED8;">Download Extracted Excel File</b> button to save your spreadsheet.
+        <p style="color: #475569; font-size: 14px; margin-top: 0; margin-bottom: 16px; font-weight: 500;">
+            Review the extracted fields in the table below. When ready, click 
+            <b style="color: #C00000;">Download Extracted Excel File</b> to save your formatted spreadsheet.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -448,10 +604,10 @@ if st.session_state.staged_records:
 else:
     # Subtle placeholder when no files are waiting
     st.markdown("""
-    <div style="background-color: #F1F5F9; border: 2px dashed #CBD5E1; border-radius: 14px; padding: 22px; text-align: center; margin-top: 20px;">
+    <div style="background-color: #FFFFFF; border: 2px dashed #CBD5E1; border-radius: 14px; padding: 24px; text-align: center; margin-top: 20px;">
         <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span style="background: #94A3B8; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 12px;">STEP 2</span>
-            <span style="color: #475569; font-weight: 700; font-size: 16px;">Extracted Data & Download</span>
+            <span style="background: #94A3B8; color: white; padding: 4px 12px; border-radius: 14px; font-weight: 700; font-size: 12px;">STEP 2</span>
+            <span style="color: #475569; font-weight: 700; font-size: 16px;">Extracted Data & Excel Export</span>
         </div>
         <p style="color: #64748B; font-size: 13px; margin: 0;">
             Drop your PDF Site Request Form(s) in Step 1 above. The extracted table and download button will appear here automatically.
