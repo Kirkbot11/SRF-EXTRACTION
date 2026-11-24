@@ -534,10 +534,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Date calculations
-today_obj = datetime.date.today()
+import streamlit.components.v1 as components
+
+def get_current_ph_datetime():
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.datetime.now(ZoneInfo("Asia/Manila"))
+    except Exception:
+        return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
+
+# Live Date & Time calculations
+now_ph = get_current_ph_datetime()
+today_obj = now_ph.date()
 today_str = today_obj.strftime("%Y-%m-%d")
-today_readable = today_obj.strftime("%A, %B %d, %Y")
+today_readable = now_ph.strftime("%A, %B %d, %Y")
+today_date_display = now_ph.strftime("%b %d, %Y")
+today_time_display = now_ph.strftime("%I:%M:%S %p")
 default_download_name = f"FTAP_Site_Requests_{today_str}.xlsx"
 
 # Initialize In-Memory Staging Session State (Strictly in RAM)
@@ -654,9 +666,35 @@ status_color = "#16A34A" if staged_count > 0 else "#64748B"
 col_m1, col_m2, col_m3, col_m4 = st.columns(4)
 with col_m1:
     st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-value">{today_obj.strftime('%b %d, %Y')}</div>
-        <div class="metric-label">📅 Current Date</div>
+    <div class="metric-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px 4px !important;">
+        <div style="font-size: 15px; font-weight: 800; color: #1F2029; line-height: 1.2; margin-bottom: 3px;">
+            <span id="live-client-date">{today_date_display}</span>
+        </div>
+        <div style="font-size: 13px; font-weight: 700; color: #C00000; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <span style="display: inline-block; width: 7px; height: 7px; background-color: #16A34A; border-radius: 50%; box-shadow: 0 0 6px #16A34A;"></span>
+            <span id="live-client-time">{today_time_display}</span>
+        </div>
+        <div class="metric-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B; font-weight: 700;">
+            📅 Live Date & Time
+        </div>
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="display:none;" onload="
+        (function(){{
+            function tick(){{
+                var now = new Date();
+                var dStr = now.toLocaleDateString('en-US', {{month:'short', day:'numeric', year:'numeric'}});
+                var tStr = now.toLocaleTimeString('en-US', {{hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true}});
+                var elD = document.getElementById('live-client-date');
+                var elT = document.getElementById('live-client-time');
+                if (elD) elD.textContent = dStr;
+                if (elT) elT.textContent = tStr;
+            }}
+            tick();
+            if (!window.__liveClockStarted) {{
+                window.__liveClockStarted = true;
+                setInterval(tick, 1000);
+            }}
+        }})();
+        "/>
     </div>
     """, unsafe_allow_html=True)
 
@@ -685,6 +723,39 @@ with col_m4:
     """, unsafe_allow_html=True)
 
 st.write("")
+
+# Dynamic client-side clock script that synchronizes to user device time
+components.html(
+    """
+    <script>
+    (function() {
+        function updateLiveClock() {
+            try {
+                const now = new Date();
+                const dStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const tStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+                const targets = [document];
+                if (window.parent && window.parent.document) {
+                    targets.push(window.parent.document);
+                }
+
+                for (const doc of targets) {
+                    const elDate = doc.getElementById('live-client-date');
+                    const elTime = doc.getElementById('live-client-time');
+                    if (elDate) elDate.textContent = dStr;
+                    if (elTime) elTime.textContent = tStr;
+                }
+            } catch (err) {}
+        }
+        updateLiveClock();
+        setInterval(updateLiveClock, 1000);
+    })();
+    </script>
+    """,
+    height=0,
+    width=0
+)
 
 # STEP 1 CONTAINER (Floating Card with Explicit Append Support)
 st.markdown("""

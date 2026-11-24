@@ -54,6 +54,13 @@ SECTION_REGEXES = [
     r".*\bINFRASTRUCTURE\s+DETAILS\b.*"
 ]
 
+def get_current_ph_datetime():
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.datetime.now(ZoneInfo("Asia/Manila"))
+    except Exception:
+        return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
+
 def clean_val(v, field_name=None):
     if v is None:
         return ""
@@ -61,6 +68,13 @@ def clean_val(v, field_name=None):
     if not v or v == "" or v.endswith(":"):
         return ""
     v_low = v.lower()
+
+    # User requirement: If the field has inputted with N/A, just print that
+    if v_low in ["n/a", "na", "n/a.", "n.a.", "not applicable"]:
+        return "N/A"
+
+    if v_low in ["none", "nan", "null", "undefined"]:
+        return ""
 
     if field_name == "Site Proposal Type":
         if v_low in ["site proposal type", "site proposal date", "site classification", "tower co. name"]:
@@ -112,7 +126,7 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
     row = {c: "" for c in ALL_COLUMNS}
     row["Filename"] = os.path.basename(filename)
     row["Document Type"] = "Site Request Form (SRF)"
-    row["Extraction Date"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    row["Extraction Date"] = get_current_ph_datetime().strftime("%Y-%m-%d %H:%M:%S")
 
     # Reference Number
     ref_match = re.search(r"Ref\.\s*No\.:\s*(.*?)(?=\s*DOCUMENT\s+REVISION|\n\s*\n)", full_text, re.DOTALL | re.IGNORECASE)
@@ -319,12 +333,19 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
                 row[f"Approval {idx} Approver Name"] = appr["Name"]
                 row[f"Approval {idx} Approval Date"] = appr["Date"]
 
-    # Final guarantee: Every single key must be a valid string (empty string for blanks)
+    # Final guarantee: Every single key must be a valid string (empty string for blanks, N/A preserved)
     for c in ALL_COLUMNS:
         if c not in row or row[c] is None:
             row[c] = ""
         else:
-            row[c] = str(row[c]).strip()
+            val_str = str(row[c]).strip()
+            val_low = val_str.lower()
+            if val_low in ["n/a", "na", "n/a.", "n.a.", "not applicable"]:
+                row[c] = "N/A"
+            elif val_low in ["none", "nan", "null", "undefined"]:
+                row[c] = ""
+            else:
+                row[c] = val_str
 
     return row
 
@@ -334,7 +355,7 @@ def get_daily_excel_path(base_folder=None, date_obj=None):
     os.makedirs(base_folder, exist_ok=True)
     
     if date_obj is None:
-        date_obj = datetime.date.today()
+        date_obj = get_current_ph_datetime().date()
     date_str = date_obj.strftime("%Y-%m-%d")
     return os.path.join(base_folder, f"Site_Requests_{date_str}.xlsx")
 
@@ -360,10 +381,17 @@ def _apply_row_style(ws, row_idx, record):
 
     for col_idx, col_name in enumerate(ALL_COLUMNS, start=1):
         val = record.get(col_name, "")
-        if val is None or str(val).strip().lower() in ["none", "nan", "null", "undefined"]:
+        if val is None:
             val = ""
         else:
-            val = str(val).strip()
+            val_str = str(val).strip()
+            val_low = val_str.lower()
+            if val_low in ["n/a", "na", "n/a.", "n.a.", "not applicable"]:
+                val = "N/A"
+            elif val_low in ["none", "nan", "null", "undefined"] or not val_str:
+                val = ""
+            else:
+                val = val_str
         cell = ws.cell(row=row_idx, column=col_idx, value=val)
 
         if col_name in ["Site ID", "Site Proposal Type", "Reference Number"]:
