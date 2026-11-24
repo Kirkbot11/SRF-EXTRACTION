@@ -585,57 +585,12 @@ with st.sidebar:
             st.markdown(f"<span class='field-tag'><b>{idx}.</b> {fld}</span>", unsafe_allow_html=True)
         st.caption("+ Source File (Excel filename tracking)")
 
-    # 3. Action Area (when files are ready)
-    staged_total = len(st.session_state.staged_records)
-    if staged_total > 0:
-        st.markdown(f"""
-        <div class="sb-section-card" style="border: 2px solid #C00000; background: #FFFBFB;">
-            <div class="sb-card-title" style="color: #C00000;">
-                <span>📥 Extracted Files</span>
-                <span class="sb-pill-count">{staged_total} READY</span>
-            </div>
-            <p style="font-size: 12px; color: #475569; margin: 0 0 10px 0;">
-                <b>{staged_total}</b> document{'s' if staged_total > 1 else ''} extracted and ready for instant export.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        records_list = list(st.session_state.staged_records.values())
-        excel_bytes = generate_excel_bytes(records_list)
-        st.download_button(
-            label=f"⬇️ Download Excel ({staged_total} Files)",
-            data=excel_bytes,
-            file_name=default_download_name,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            type="primary",
-            use_container_width=True
-        )
-        if st.button("🗑️ Clear Extracted Data", use_container_width=True):
-            st.session_state.staged_records.clear()
-            st.rerun()
-
-    # 4. Status & Security Info Card
-    st.markdown(f"""
-    <div class="sb-section-card">
-        <div class="sb-card-title">
-            <span>📅 System Status</span>
-            <span style="font-size: 11px; font-weight: 700; color: #16A34A;">● ACTIVE</span>
-        </div>
-        <div style="font-size: 12px; color: #334155; margin-bottom: 6px;">
-            <b>Date:</b> {today_readable}
-        </div>
-        <div style="background: #F1F5F9; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #475569; display: flex; align-items: center; gap: 6px;">
-            <span>🔒</span> <b>100% In-Memory RAM:</b> Zero disk storage
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # 5. Step-by-Step Instructions Card (Highlighting Batch Appending)
+    # 3. Step-by-Step Instructions Card (Highlighting Batch Appending & Tab Warning)
     st.markdown("""
     <div class="sb-section-card">
         <div class="sb-card-title">
             <span>💡 Quick Instructions</span>
-            <span style="font-size: 11px; color: #16A34A; font-weight: 700;">● Append Ready</span>
+            <span style="font-size: 11px; color: #16A34A; font-weight: 700;">● Auto-Append On</span>
         </div>
         <div class="sb-step-item">
             <span class="sb-step-badge">1</span>
@@ -658,8 +613,14 @@ with st.sidebar:
                 <span>Export all batched and late-added SRFs into one single spreadsheet.</span>
             </div>
         </div>
-        <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 7px 10px; margin-top: 10px; font-size: 11px; color: #166534; line-height: 1.35;">
-            <b>🔄 Late SRFs Allowed:</b> Uploading new files will never erase your current batch. Everything accumulates in RAM.
+        <div style="background: #FFF1F1; border: 1px solid #FECACA; border-left: 4px solid #C00000; border-radius: 8px; padding: 10px 12px; margin-top: 12px; font-size: 11px; color: #7F1D1D; line-height: 1.45;">
+            <div style="font-weight: 800; color: #991B1B; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                <span>🔄</span> Late SRFs Allowed
+            </div>
+            Uploading new or late batches anytime will automatically append to your session.
+            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #FECACA; font-weight: 700; color: #C00000;">
+                ⚠️ IMPORTANT: Do NOT reload or refresh the browser tab, as refreshing will delete all extracted data from memory.
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -869,11 +830,14 @@ if st.session_state.staged_records:
             </div>
             <span class="step-badge-ready">✓ {rec_count} Record(s) Extracted & Ready</span>
         </div>
-        <p style="color: #475569; font-size: 14px; margin-top: 0; margin-bottom: 16px; font-weight: 500;">
+        <p style="color: #475569; font-size: 14px; margin-top: 0; margin-bottom: 10px; font-weight: 500;">
             Review the <b>{rec_count} accumulated records</b> in the table below. When ready, click 
             <b style="color: #C00000;">Download Extracted Excel File</b> to save your combined spreadsheet.
             <i>(If additional SRFs arrive late today, simply return to Step 1 above to append them anytime.)</i>
         </p>
+        <div style="background: #FFF8F8; border: 1px solid #FECACA; border-radius: 8px; padding: 6px 12px; margin-bottom: 12px; font-size: 12px; color: #991B1B; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+            <span>⚠️</span> <b>Do Not Reload Tab:</b> Refreshing this browser tab will clear your in-memory records. Be sure to download your Excel file or append your late SRFs before closing.
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
