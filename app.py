@@ -50,7 +50,8 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    p, span, label, div {
+    /* General prose styling - targeting text elements outside buttons */
+    .stApp p, .stApp label {
         color: #334155;
     }
 
@@ -254,7 +255,7 @@ st.markdown("""
         border: 2px dashed #C00000 !important;
         background-color: #FFF8F8 !important;
         border-radius: 14px !important;
-        padding: 26px !important;
+        padding: 24px !important;
         transition: background-color 0.2s ease, border-color 0.2s ease;
     }
     [data-testid="stFileUploaderDropzone"]:hover {
@@ -270,7 +271,62 @@ st.markdown("""
         font-weight: 500 !important;
     }
 
-    /* Primary & Secondary Buttons Overrides (FTAP Brand Red) */
+    /* ========================================================
+       PROMINENT & HIGH-VISIBILITY "ADD MORE FILES" (+) BUTTON
+       ======================================================== */
+    [data-testid="stFileUploader"] button[aria-label="Add files"],
+    [data-testid="stFileUploaderDropzone"] button[aria-label="Add files"],
+    button[aria-label="Add files"],
+    [data-testid="stFileUploader"] [data-testid="stBaseButton-borderless"] {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: linear-gradient(135deg, #C00000 0%, #A00000 100%) !important;
+        color: #FFFFFF !important;
+        border: 2px solid #8B0000 !important;
+        border-radius: 8px !important;
+        padding: 6px 14px !important;
+        height: 38px !important;
+        min-width: 44px !important;
+        margin-left: 8px !important;
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 12px rgba(192, 0, 0, 0.35) !important;
+        transition: all 0.2s ease-in-out !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    [data-testid="stFileUploader"] button[aria-label="Add files"]:hover,
+    button[aria-label="Add files"]:hover {
+        background: linear-gradient(135deg, #D61B2B 0%, #B30000 100%) !important;
+        transform: translateY(-2px) scale(1.05) !important;
+        box-shadow: 0 6px 16px rgba(192, 0, 0, 0.5) !important;
+    }
+    [data-testid="stFileUploader"] button[aria-label="Add files"] *,
+    [data-testid="stFileUploader"] button[aria-label="Add files"] svg,
+    [data-testid="stFileUploader"] button[aria-label="Add files"] span {
+        color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+        font-size: 20px !important;
+        font-weight: 900 !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+    [data-testid="stFileUploader"] button[aria-label="Add files"]::after {
+        content: " Add More Files" !important;
+        color: #FFFFFF !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        margin-left: 6px !important;
+        white-space: nowrap !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+
+    /* ========================================================
+       PRIMARY & SECONDARY BUTTON OVERRIDES (CRISP WHITE TEXT)
+       ======================================================== */
+    button[kind="primary"],
     div.stButton > button[kind="primary"],
     div[data-testid="stDownloadButton"] > button[kind="primary"] {
         background: linear-gradient(135deg, #C00000 0%, #A00000 100%) !important;
@@ -278,11 +334,12 @@ st.markdown("""
         border: none !important;
         border-radius: 10px !important;
         padding: 10px 24px !important;
-        font-weight: 700 !important;
-        font-size: 14px !important;
+        font-weight: 800 !important;
+        font-size: 15px !important;
         box-shadow: 0 4px 14px rgba(192, 0, 0, 0.35) !important;
         transition: all 0.2s ease-in-out !important;
     }
+    button[kind="primary"]:hover,
     div.stButton > button[kind="primary"]:hover,
     div[data-testid="stDownloadButton"] > button[kind="primary"]:hover {
         background: linear-gradient(135deg, #D41525 0%, #B30000 100%) !important;
@@ -290,6 +347,30 @@ st.markdown("""
         transform: translateY(-1px);
     }
 
+    /* Force all nested text, divs, spans and paragraphs inside primary buttons to be pure white */
+    button[kind="primary"] *,
+    button[kind="primary"] p,
+    button[kind="primary"] span,
+    button[kind="primary"] div,
+    button[kind="primary"] svg,
+    div.stButton > button[kind="primary"] *,
+    div.stButton > button[kind="primary"] p,
+    div.stButton > button[kind="primary"] span,
+    div.stButton > button[kind="primary"] div,
+    div[data-testid="stDownloadButton"] > button[kind="primary"] *,
+    div[data-testid="stDownloadButton"] > button[kind="primary"] p,
+    div[data-testid="stDownloadButton"] > button[kind="primary"] span,
+    div[data-testid="stDownloadButton"] > button[kind="primary"] div {
+        color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+        font-weight: 800 !important;
+        font-size: 15px !important;
+    }
+
+    /* Secondary Buttons (Clear Data) */
+    button[kind="secondary"],
     div.stButton > button[kind="secondary"],
     div[data-testid="stDownloadButton"] > button[kind="secondary"] {
         border: 1px solid #CBD5E1 !important;
@@ -300,11 +381,25 @@ st.markdown("""
         font-weight: 600 !important;
         transition: all 0.2s ease !important;
     }
+    button[kind="secondary"] *,
+    button[kind="secondary"] p,
+    button[kind="secondary"] span,
+    div.stButton > button[kind="secondary"] *,
+    div[data-testid="stDownloadButton"] > button[kind="secondary"] * {
+        color: #334155 !important;
+        -webkit-text-fill-color: #334155 !important;
+    }
+    button[kind="secondary"]:hover,
     div.stButton > button[kind="secondary"]:hover,
     div[data-testid="stDownloadButton"] > button[kind="secondary"]:hover {
         border-color: #C00000 !important;
-        color: #C00000 !important;
         background-color: #FFF5F5 !important;
+    }
+    button[kind="secondary"]:hover *,
+    div.stButton > button[kind="secondary"]:hover *,
+    div[data-testid="stDownloadButton"] > button[kind="secondary"]:hover * {
+        color: #C00000 !important;
+        -webkit-text-fill-color: #C00000 !important;
     }
 
     /* ========================================================
@@ -651,6 +746,23 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True,
     help="Drag and drop PDF files into this area."
 )
+
+# Appending & Add More Files Helper Banner
+if uploaded_files or st.session_state.staged_records:
+    current_count = len(st.session_state.staged_records)
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: #FFF8F8; border: 1px solid #FECACA; border-left: 4px solid #C00000; border-radius: 10px; padding: 10px 16px; margin-top: 8px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">➕</span>
+            <span style="font-size: 13px; color: #7F1D1D; font-weight: 600;">
+                <b>Appending More Files:</b> Click the prominent red <b>[+ Add More Files]</b> button inside the box above to add more incoming SRFs.
+            </span>
+        </div>
+        <span style="background: #FEE2E2; color: #991B1B; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 12px; letter-spacing: 0.3px;">
+            BATCH APPEND ACTIVE {'(' + str(current_count) + ' Staged)' if current_count > 0 else ''}
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Verification Card & Proceed Button Before Extraction
 if uploaded_files:
