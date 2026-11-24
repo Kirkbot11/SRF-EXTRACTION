@@ -6,6 +6,7 @@ A lightweight, non-technical, browser-based enterprise application built for **F
 - **Official FTAP Brand Design**: Styled with Frontier Towers Philippines corporate crimson palette (`#C00000`), clear badges, and company header logo.
 - **Pure In-Browser Processing**: Uploaded PDFs are processed strictly in RAM—no files or temporary documents are stored on disk.
 - **Pre-Extraction Verification**: Review uploaded filenames and sizes before confirming extraction.
+- **Batch Appending & Late SRF Support**: Upload PDFs in multiple batches throughout the day. Late-arriving SRFs seamlessly append into the active dataset without losing previous records.
 - **14 Core Fields Extracted (1:1 with Python Code)**:
   1. Smart Site ID
   2. Smart Site Name

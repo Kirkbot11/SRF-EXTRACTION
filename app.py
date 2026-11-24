@@ -630,33 +630,36 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # 5. Step-by-Step Instructions Card
+    # 5. Step-by-Step Instructions Card (Highlighting Batch Appending)
     st.markdown("""
     <div class="sb-section-card">
         <div class="sb-card-title">
             <span>💡 Quick Instructions</span>
-            <span style="font-size: 11px; color: #64748B;">3 Steps</span>
+            <span style="font-size: 11px; color: #16A34A; font-weight: 700;">● Append Ready</span>
         </div>
         <div class="sb-step-item">
             <span class="sb-step-badge">1</span>
             <div class="sb-step-text">
-                <b>Upload SRFs</b>
-                <span>Drop PDF Site Request Form(s) in Step 1.</span>
+                <b>Upload & Append</b>
+                <span>Drop PDFs anytime. Late SRFs automatically append to your active batch.</span>
             </div>
         </div>
         <div class="sb-step-item">
             <span class="sb-step-badge">2</span>
             <div class="sb-step-text">
-                <b>Verify & Extract</b>
-                <span>Confirm file list & extract all 14 fields.</span>
+                <b>Verify & Merge</b>
+                <span>Confirm new files & extract 14 fields directly into the existing dataset.</span>
             </div>
         </div>
         <div class="sb-step-item">
             <span class="sb-step-badge">3</span>
             <div class="sb-step-text">
-                <b>Download Excel</b>
-                <span>Export directly into formatted spreadsheet.</span>
+                <b>Download Combined Excel</b>
+                <span>Export all batched and late-added SRFs into one single spreadsheet.</span>
             </div>
+        </div>
+        <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 7px 10px; margin-top: 10px; font-size: 11px; color: #166534; line-height: 1.35;">
+            <b>🔄 Late SRFs Allowed:</b> Uploading new files will never erase your current batch. Everything accumulates in RAM.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -727,15 +730,20 @@ with col_m4:
 
 st.write("")
 
-# STEP 1 CONTAINER (Floating Card)
+# STEP 1 CONTAINER (Floating Card with Explicit Append Support)
 st.markdown("""
 <div class="step1-card">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-        <span class="step-badge">STEP 1</span>
-        <span style="font-size: 19px; font-weight: 800; color: #1F2029;">Upload Incoming Site Request Forms</span>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="step-badge">STEP 1</span>
+            <span style="font-size: 19px; font-weight: 800; color: #1F2029;">Upload Incoming Site Request Forms</span>
+        </div>
+        <span style="background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 14px; display: inline-flex; align-items: center; gap: 6px;">
+            <span>🔄</span> BATCH APPEND ENABLED • LATE SRFs ALLOWED
+        </span>
     </div>
     <p style="color: #64748B; font-size: 14px; margin-top: 0; margin-bottom: 14px;">
-        Drag & drop one or multiple SRF PDF documents below. You can verify document names and file sizes before initiating the 1-to-1 field extraction.
+        Drag & drop one or multiple SRF PDF documents below. <b>Late or staggered SRF uploads are fully supported</b>—you can upload multiple batches throughout the day, and all extracted data will automatically append and accumulate into your single daily Excel file.
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -747,19 +755,38 @@ uploaded_files = st.file_uploader(
     help="Drag and drop PDF files into this area."
 )
 
-# Appending & Add More Files Helper Banner
-if uploaded_files or st.session_state.staged_records:
-    current_count = len(st.session_state.staged_records)
+# Appending & Late SRF Status Indicator
+current_count = len(st.session_state.staged_records)
+if current_count > 0:
     st.markdown(f"""
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: #FFF8F8; border: 1px solid #FECACA; border-left: 4px solid #C00000; border-radius: 10px; padding: 10px 16px; margin-top: 8px; margin-bottom: 14px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 20px;">➕</span>
-            <span style="font-size: 13px; color: #7F1D1D; font-weight: 600;">
-                <b>Appending More Files:</b> Click the prominent red <b>[+ Add More Files]</b> button inside the box above to add more incoming SRFs.
-            </span>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: #FFF8F8; border: 1px solid #FECACA; border-left: 5px solid #C00000; border-radius: 10px; padding: 12px 18px; margin-top: 8px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(192, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 22px;">🔄</span>
+            <div>
+                <div style="font-size: 13px; color: #7F1D1D; font-weight: 800;">
+                    APPEND MODE ACTIVE: {current_count} Record{'s' if current_count > 1 else ''} Currently in Excel Pool
+                </div>
+                <div style="font-size: 12px; color: #991B1B; font-weight: 500;">
+                    Got a late SRF? Click the red <b>[+ Add More Files]</b> button above to append more files into this batch without losing previous records.
+                </div>
+            </div>
         </div>
         <span style="background: #FEE2E2; color: #991B1B; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 12px; letter-spacing: 0.3px;">
-            BATCH APPEND ACTIVE {'(' + str(current_count) + ' Staged)' if current_count > 0 else ''}
+            ACCUMULATING RECORDS
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #16A34A; border-radius: 10px; padding: 10px 16px; margin-top: 8px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 18px;">ℹ️</span>
+            <span style="font-size: 12px; color: #334155; font-weight: 600;">
+                <b>Multi-Batch & Late SRF Ready:</b> Upload your initial files now. Any late SRFs added later today will automatically append to this session.
+            </span>
+        </div>
+        <span style="background: #ECFDF5; color: #047857; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 10px;">
+            AUTO-APPEND ON
         </span>
     </div>
     """, unsafe_allow_html=True)
@@ -769,19 +796,23 @@ if uploaded_files:
     unextracted_files = [uf for uf in uploaded_files if uf.name not in st.session_state.staged_records]
     
     if unextracted_files:
+        is_appending = current_count > 0
+        action_verb = "Appending" if is_appending else "Extraction"
+        subtitle_note = f"Review the {len(unextracted_files)} new file{'s' if len(unextracted_files) > 1 else ''} below. When ready, click <b>Proceed with Appending</b> to merge them with your {current_count} existing record{'s' if current_count > 1 else ''} in memory." if is_appending else f"Review the uploaded files below. When ready, click <b>Proceed with Extraction</b> to extract all 14 core fields into memory."
+
         st.markdown(f"""
         <div class="verify-card">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="background: #C00000; color: white; padding: 4px 12px; border-radius: 14px; font-weight: 800; font-size: 12px;">VERIFICATION</span>
-                    <span style="font-weight: 800; font-size: 18px; color: #1F2029;">Verify Uploaded Files Before Extraction</span>
+                    <span style="background: #C00000; color: white; padding: 4px 12px; border-radius: 14px; font-weight: 800; font-size: 12px;">{'APPEND VERIFICATION' if is_appending else 'VERIFICATION'}</span>
+                    <span style="font-weight: 800; font-size: 18px; color: #1F2029;">Verify New Files Before {action_verb}</span>
                 </div>
                 <span style="background: #FFF1F1; color: #C00000; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 12px; border: 1px solid #FED7D7;">
-                    {len(unextracted_files)} File{'s' if len(unextracted_files) > 1 else ''} Ready
+                    {len(unextracted_files)} New File{'s' if len(unextracted_files) > 1 else ''} {'Ready to Append' if is_appending else 'Ready'}
                 </span>
             </div>
             <p style="color: #64748B; font-size: 14px; margin: 0 0 14px 0; font-weight: 500;">
-                Review the uploaded files below. When ready, click <b>Proceed with Extraction</b> to extract all 14 core fields into memory.
+                {subtitle_note}
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -794,15 +825,16 @@ if uploaded_files:
                 "#": idx,
                 "File Name": uf.name,
                 "File Size": f"{size_kb} KB",
-                "Verification Status": "⏳ Ready to Extract"
+                "Action": "🔄 Will Append to Pool" if is_appending else "⏳ Ready to Extract"
             })
         
         st.dataframe(pd.DataFrame(file_summary), use_container_width=True, hide_index=True)
         
         col_p1, col_p2 = st.columns([3, 1])
         with col_p1:
+            button_label = f"🚀 Proceed with Appending ({len(unextracted_files)} New File{'s' if len(unextracted_files) > 1 else ''} -> Merging into {current_count} Existing)" if is_appending else f"🚀 Proceed with Extraction ({len(unextracted_files)} File{'s' if len(unextracted_files) > 1 else ''})"
             proceed_clicked = st.button(
-                f"🚀 Proceed with Extraction ({len(unextracted_files)} File{'s' if len(unextracted_files) > 1 else ''})",
+                button_label,
                 type="primary",
                 use_container_width=True
             )
@@ -812,15 +844,15 @@ if uploaded_files:
                 st.rerun()
 
         if proceed_clicked:
-            with st.spinner(f"Extracting all 14 core fields from {len(unextracted_files)} PDF(s)..."):
+            with st.spinner(f"Extracting and appending 14 core fields from {len(unextracted_files)} PDF(s)..."):
                 for uf in unextracted_files:
                     bytes_data = uf.getvalue()
                     data = extract_pdf_data(bytes_data, filename=uf.name)
                     st.session_state.staged_records[uf.name] = data
-            st.toast(f"Extracted {len(unextracted_files)} PDF(s) successfully!", icon="✅")
+            st.toast(f"Appended {len(unextracted_files)} PDF(s) successfully! Total: {len(st.session_state.staged_records)}", icon="✅")
             st.rerun()
     else:
-        st.caption("✓ All selected files have been extracted below. Drop more files above if you have additional incoming SRFs.")
+        st.caption("✓ All selected files have been extracted below. Drop more files above or click [+ Add More Files] to append late incoming SRFs.")
 
 # STEP 2 FLOATING CARD (Direct Download from Extracted Data)
 if st.session_state.staged_records:
@@ -838,8 +870,9 @@ if st.session_state.staged_records:
             <span class="step-badge-ready">✓ {rec_count} Record(s) Extracted & Ready</span>
         </div>
         <p style="color: #475569; font-size: 14px; margin-top: 0; margin-bottom: 16px; font-weight: 500;">
-            Review the extracted fields in the table below. When ready, click 
-            <b style="color: #C00000;">Download Extracted Excel File</b> to save your formatted spreadsheet.
+            Review the <b>{rec_count} accumulated records</b> in the table below. When ready, click 
+            <b style="color: #C00000;">Download Extracted Excel File</b> to save your combined spreadsheet.
+            <i>(If additional SRFs arrive late today, simply return to Step 1 above to append them anytime.)</i>
         </p>
     </div>
     """, unsafe_allow_html=True)
