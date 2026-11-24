@@ -84,8 +84,8 @@ def extract_pdf_data(pdf_path):
     patterns = {
         "Smart Site ID": r"Smart Site ID:\s*\n\s*([^\r\n]+)",
         "Smart Site Name": r"Smart Site Name:\s*\n\s*([^\r\n]+)",
-        "Site Proposal Type": r"Site Proposal Type:\s*\n\s*([^\r\n]+)",
-        "Site Proposal Date": r"Site Proposal Date:\s*\n\s*([^\r\n]+)",
+        "Site Proposal Type": r"Site Proposal Type:?\s*\n?\s*([^\r\n]+)",
+        "Site Proposal Date": r"Site Proposal Date:?\s*\n?\s*([^\r\n]+)",
         "Tower Co. Name": r"Tower Co\. Name:\s*\n\s*([^\r\n]+)",
         "Site Classification (Uptime SLA)": r"Site Classification \(Uptime SLA\):\s*\n\s*([^\r\n]+)",
         "Site Address": r"Site Address:\s*\n\s*([^\r\n]+)",
