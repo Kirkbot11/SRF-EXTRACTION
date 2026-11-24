@@ -449,4 +449,56 @@ def append_to_daily_excel(records, excel_path=None):
     ws = wb.active
 
     headers = [cell.value for cell in ws[1]]
-    ref_col_idx = headers.index("Reference Number") + 1 if
+    ref_col_idx = headers.index("Reference Number") + 1 if "Reference Number" in headers else None
+    file_col_idx = headers.index("Filename") + 1 if "Filename" in headers else None
+
+    existing_identifiers = set()
+    for row in range(2, ws.max_row + 1):
+        ref_val = ws.cell(row=row, column=ref_col_idx).value if ref_col_idx else None
+        file_val = ws.cell(row=row, column=file_col_idx).value if file_col_idx else None
+        if ref_val and str(ref_val).strip():
+            existing_identifiers.add(str(ref_val).strip().lower())
+        elif file_val and str(file_val).strip():
+            existing_identifiers.add(str(file_val).strip().lower())
+
+    added_count = 0
+    skipped_count = 0
+    current_row = ws.max_row + 1
+
+    for record in records:
+        rec_ref = record.get("Reference Number", "").strip().lower()
+        rec_file = record.get("Filename", "").strip().lower()
+        
+        if (rec_ref and rec_ref in existing_identifiers) or \
+           (rec_file and rec_file in existing_identifiers):
+            skipped_count += 1
+            continue
+
+        _apply_row_style(ws, current_row, record)
+        if rec_ref:
+            existing_identifiers.add(rec_ref)
+        if rec_file:
+            existing_identifiers.add(rec_file)
+        
+        current_row += 1
+        added_count += 1
+
+    wb.save(excel_path)
+    total_in_file = ws.max_row - 1
+
+    return {
+        "status": "appended",
+        "added": added_count,
+        "skipped": skipped_count,
+        "total": total_in_file,
+        "excel_path": excel_path
+    }
+
+def load_daily_dataframe(excel_path=None):
+    if excel_path is None:
+        excel_path = get_daily_excel_path()
+    if not os.path.exists(excel_path):
+        return pd.DataFrame()
+    df = pd.read_excel(excel_path, keep_default_na=False)
+    # Ensure NaN or None are empty strings
+    return df.fillna("")
