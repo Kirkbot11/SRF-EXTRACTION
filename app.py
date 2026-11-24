@@ -651,7 +651,7 @@ st.markdown(f"""
             {logo_html}
             <div class="ftap-title-block">
                 <h1>Automated Site Request Form (SRF) Extractor</h1>
-                <p>Frontier Tower Associates Philippines • Operations & Engineering Infrastructure</p>
+                <p>Frontier Tower Associates Philippines • Commercial</p>
             </div>
         </div>
     </div>
