@@ -7,6 +7,7 @@ import pandas as pd
 from extractor import (
     extract_pdf_data, 
     generate_excel_bytes,
+    CORE_FIELDS,
     ALL_COLUMNS
 )
 
@@ -86,14 +87,14 @@ st.markdown("""
         gap: 20px;
     }
     .ftap-logo-img {
-        height: 58px;
+        height: 56px;
         width: auto;
-        max-width: 240px;
+        max-width: 230px;
         object-fit: contain;
     }
     .ftap-title-block h1 {
         color: #1F2029 !important;
-        font-size: 24px !important;
+        font-size: 23px !important;
         font-weight: 800 !important;
         margin: 0 !important;
         padding-bottom: 4px !important;
@@ -306,30 +307,135 @@ st.markdown("""
         background-color: #FFF5F5 !important;
     }
 
-    /* Sidebar Styling */
+    /* ========================================================
+       SIDEBAR REFINED & NOTICEABLE ALIGNMENT
+       ======================================================== */
     [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
+        background-color: #F8FAFC !important;
         border-right: 1px solid #E2E8F0 !important;
     }
-    .ftap-sidebar-card {
-        background: #F8FAFC;
-        border-radius: 14px;
-        padding: 16px;
-        border: 1px solid #E2E8F0;
-        margin-bottom: 16px;
-        text-align: center;
+    [data-testid="stSidebarContent"] {
+        padding: 1.25rem 1rem !important;
     }
-    .ftap-sidebar-logo {
-        max-width: 190px;
+
+    /* Branded Header Card in Sidebar */
+    .sb-brand-card {
+        background: #FFFFFF;
+        border-radius: 14px;
+        padding: 18px 14px;
+        border: 1px solid #E2E8F0;
+        border-top: 4px solid #C00000;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+        text-align: center;
+        margin-bottom: 16px;
+    }
+    .sb-brand-logo {
+        max-width: 175px;
         height: auto;
         margin-bottom: 10px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
     }
-    .ftap-sidebar-tag {
-        font-size: 11px;
-        font-weight: 700;
-        color: #C00000;
+    .sb-brand-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: #1F2029;
         letter-spacing: 0.5px;
         text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    .sb-brand-badge {
+        display: inline-block;
+        background: #FFF1F1;
+        color: #C00000;
+        border: 1px solid #FED7D7;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 12px;
+        letter-spacing: 0.4px;
+    }
+
+    /* Noticeable Section Card in Sidebar */
+    .sb-section-card {
+        background: #FFFFFF;
+        border-radius: 12px;
+        padding: 14px;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        margin-bottom: 14px;
+    }
+    .sb-card-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 800;
+        color: #1F2029;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #F1F5F9;
+    }
+    .sb-pill-count {
+        background: #C00000;
+        color: #FFFFFF;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+
+    /* Structured Step-by-Step Rows */
+    .sb-step-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px dashed #F1F5F9;
+    }
+    .sb-step-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .sb-step-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+        background: #C00000;
+        color: #FFFFFF;
+        font-weight: 800;
+        font-size: 11px;
+        border-radius: 50%;
+        margin-top: 2px;
+    }
+    .sb-step-text b {
+        color: #1F2029;
+        font-size: 13px;
+        display: block;
+        margin-bottom: 2px;
+    }
+    .sb-step-text span {
+        color: #64748B;
+        font-size: 12px;
+        line-height: 1.3;
+        display: block;
+    }
+
+    /* Field Chip List in Expander */
+    .field-tag {
+        display: inline-block;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        color: #334155;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 6px;
+        margin: 2px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -344,36 +450,61 @@ default_download_name = f"FTAP_Site_Requests_{today_str}.xlsx"
 if "staged_records" not in st.session_state:
     st.session_state.staged_records = {}  # filename -> record dict
 
-# Sidebar - Frontier Towers Philippines Branded
+# ========================================================
+# SIDEBAR - HIGH-VISIBILITY, ALIGNED, ENTERPRISE BRANDING
+# ========================================================
 with st.sidebar:
-    # Sidebar Logo & Branding Block
+    # 1. FTAP Brand Card
     if header_logo_b64:
         st.markdown(f"""
-        <div class="ftap-sidebar-card">
-            <img src="data:image/png;base64,{header_logo_b64}" class="ftap-sidebar-logo" alt="Frontier Towers Philippines" />
-            <div class="ftap-sidebar-tag">Enterprise Extraction Portal</div>
-        </div>
-        """, unsafe_allow_html=True)
-    elif icon_logo_b64:
-        st.markdown(f"""
-        <div class="ftap-sidebar-card">
-            <img src="data:image/png;base64,{icon_logo_b64}" style="max-height: 48px; width: auto; margin-bottom: 6px;" alt="FTAP Logo" />
-            <div style="font-weight: 800; color: #1F2029; font-size: 15px;">FRONTIER TOWERS</div>
-            <div class="ftap-sidebar-tag">Philippines</div>
+        <div class="sb-brand-card">
+            <img src="data:image/png;base64,{header_logo_b64}" class="sb-brand-logo" alt="Frontier Towers Philippines" />
+            <div class="sb-brand-title">Frontier Towers Philippines</div>
+            <div class="sb-brand-badge">SRF Extraction Engine</div>
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown("### 🗼 Frontier Towers Philippines")
+        st.markdown("""
+        <div class="sb-brand-card">
+            <div style="font-size: 28px; margin-bottom: 4px;">🗼</div>
+            <div class="sb-brand-title">Frontier Towers Philippines</div>
+            <div class="sb-brand-badge">SRF Extraction Engine</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.markdown(f"**Automated SRF Extractor** extracts all **{len(ALL_COLUMNS)} standard telecom fields** directly into formatted Excel.")
-    st.caption("🔒 100% in-browser processing. Zero data stored on disk.")
-    
-    st.markdown("---")
-    st.markdown(f"**📅 Date:** {today_readable}")
-    
+    # 2. Extracted Fields Reference (1-to-1 Match with Python Code)
+    st.markdown(f"""
+    <div class="sb-section-card">
+        <div class="sb-card-title">
+            <span>📋 Target Extraction</span>
+            <span class="sb-pill-count">{len(CORE_FIELDS)} Fields (1:1)</span>
+        </div>
+        <p style="font-size: 12px; color: #64748B; margin: 0 0 6px 0; line-height: 1.35;">
+            Extracts the exact <b>{len(CORE_FIELDS)} core fields</b> 1-to-1 as specified in the Python extraction code.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.expander(f"🔍 View all {len(CORE_FIELDS)} Fields (1:1 List)", expanded=False):
+        for idx, fld in enumerate(CORE_FIELDS, 1):
+            st.markdown(f"<span class='field-tag'><b>{idx}.</b> {fld}</span>", unsafe_allow_html=True)
+        st.caption("+ Source File (Excel filename tracking)")
+
+    # 3. Action Area (when files are ready)
     staged_total = len(st.session_state.staged_records)
     if staged_total > 0:
-        st.markdown(f"**📥 Extracted Files:** <span style='color: #C00000; font-weight: 800;'>{staged_total} ready</span>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="sb-section-card" style="border: 2px solid #C00000; background: #FFFBFB;">
+            <div class="sb-card-title" style="color: #C00000;">
+                <span>📥 Extracted Files</span>
+                <span class="sb-pill-count">{staged_total} READY</span>
+            </div>
+            <p style="font-size: 12px; color: #475569; margin: 0 0 10px 0;">
+                <b>{staged_total}</b> document{'s' if staged_total > 1 else ''} extracted and ready for instant export.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
         records_list = list(st.session_state.staged_records.values())
         excel_bytes = generate_excel_bytes(records_list)
         st.download_button(
@@ -384,25 +515,65 @@ with st.sidebar:
             type="primary",
             use_container_width=True
         )
-        if st.button("🗑️ Clear All Extracted Data", use_container_width=True):
+        if st.button("🗑️ Clear Extracted Data", use_container_width=True):
             st.session_state.staged_records.clear()
             st.rerun()
 
-    st.markdown("---")
-    st.markdown("### 💡 Quick Instructions")
-    st.markdown("""
-    1. **Upload**: Drag & drop incoming Site Request Form (SRF) PDFs in **Step 1**.
-    2. **Verify & Extract**: Confirm file list and extract all 101 fields into memory.
-    3. **Download**: Review in **Step 2** and click **Download Extracted Excel File**.
-    """)
-    st.caption("Frontier Tower Associates Philippines (FTAP)")
+    # 4. Status & Security Info Card
+    st.markdown(f"""
+    <div class="sb-section-card">
+        <div class="sb-card-title">
+            <span>📅 System Status</span>
+            <span style="font-size: 11px; font-weight: 700; color: #16A34A;">● ACTIVE</span>
+        </div>
+        <div style="font-size: 12px; color: #334155; margin-bottom: 6px;">
+            <b>Date:</b> {today_readable}
+        </div>
+        <div style="background: #F1F5F9; border-radius: 8px; padding: 6px 10px; font-size: 11px; color: #475569; display: flex; align-items: center; gap: 6px;">
+            <span>🔒</span> <b>100% In-Memory RAM:</b> Zero disk storage
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Main Content Header Banner (FTAP Corporate Branding)
+    # 5. Step-by-Step Instructions Card
+    st.markdown("""
+    <div class="sb-section-card">
+        <div class="sb-card-title">
+            <span>💡 Quick Instructions</span>
+            <span style="font-size: 11px; color: #64748B;">3 Steps</span>
+        </div>
+        <div class="sb-step-item">
+            <span class="sb-step-badge">1</span>
+            <div class="sb-step-text">
+                <b>Upload SRFs</b>
+                <span>Drop PDF Site Request Form(s) in Step 1.</span>
+            </div>
+        </div>
+        <div class="sb-step-item">
+            <span class="sb-step-badge">2</span>
+            <div class="sb-step-text">
+                <b>Verify & Extract</b>
+                <span>Confirm file list & extract all 14 fields.</span>
+            </div>
+        </div>
+        <div class="sb-step-item">
+            <span class="sb-step-badge">3</span>
+            <div class="sb-step-text">
+                <b>Download Excel</b>
+                <span>Export directly into formatted spreadsheet.</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ========================================================
+# MAIN CONTENT HEADER BANNER
+# ========================================================
 logo_html = ""
 if header_logo_b64:
     logo_html = f'<img src="data:image/png;base64,{header_logo_b64}" class="ftap-logo-img" alt="Frontier Towers Philippines Logo" />'
 elif icon_logo_b64:
-    logo_html = f'<img src="data:image/png;base64,{icon_logo_b64}" style="height: 52px; width: auto;" alt="FTAP Logo" />'
+    logo_html = f'<img src="data:image/png;base64,{icon_logo_b64}" style="height: 50px; width: auto;" alt="FTAP Logo" />'
 
 st.markdown(f"""
 <div class="ftap-header-box">
@@ -415,13 +586,13 @@ st.markdown(f"""
             </div>
         </div>
         <div class="ftap-badge-enterprise">
-            <span>🗼</span> FTAP Enterprise Suite
+            <span>🗼</span> {len(CORE_FIELDS)} Fields (1:1 Match)
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Metrics Summary Row
+# Metrics Summary Row (4 equal height cards)
 staged_count = len(st.session_state.staged_records)
 status_text = "READY" if staged_count > 0 else "WAITING"
 status_color = "#16A34A" if staged_count > 0 else "#64748B"
@@ -446,8 +617,8 @@ with col_m2:
 with col_m3:
     st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-value" style="color: #C00000;">{len(ALL_COLUMNS)}</div>
-        <div class="metric-label">📑 Standard Fields</div>
+        <div class="metric-value" style="color: #C00000;">{len(CORE_FIELDS)}</div>
+        <div class="metric-label">📋 Extracted Fields</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -469,7 +640,7 @@ st.markdown("""
         <span style="font-size: 19px; font-weight: 800; color: #1F2029;">Upload Incoming Site Request Forms</span>
     </div>
     <p style="color: #64748B; font-size: 14px; margin-top: 0; margin-bottom: 14px;">
-        Drag & drop one or multiple SRF PDF documents below. You can verify document names and file sizes before initiating the automated extraction.
+        Drag & drop one or multiple SRF PDF documents below. You can verify document names and file sizes before initiating the 1-to-1 field extraction.
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -498,7 +669,7 @@ if uploaded_files:
                 </span>
             </div>
             <p style="color: #64748B; font-size: 14px; margin: 0 0 14px 0; font-weight: 500;">
-                Review the uploaded files below. When you are ready, click <b>Proceed with Extraction</b> to extract all 101 fields into memory.
+                Review the uploaded files below. When ready, click <b>Proceed with Extraction</b> to extract all 14 core fields into memory.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -529,7 +700,7 @@ if uploaded_files:
                 st.rerun()
 
         if proceed_clicked:
-            with st.spinner(f"Extracting all 101 fields from {len(unextracted_files)} PDF(s)..."):
+            with st.spinner(f"Extracting all 14 core fields from {len(unextracted_files)} PDF(s)..."):
                 for uf in unextracted_files:
                     bytes_data = uf.getvalue()
                     data = extract_pdf_data(bytes_data, filename=uf.name)
