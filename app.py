@@ -36,6 +36,44 @@ st.set_page_config(
 # Frontier Towers Philippines (FTAP) Official Brand Styling
 st.markdown("""
 <style>
+    /* ========================================================
+       COMPLETELY HIDE STREAMLIT TOP HEADER, 3-DOTS, GITHUB & MANAGE APP
+       ======================================================== */
+    #MainMenu,
+    header,
+    header[data-testid="stHeader"],
+    [data-testid="stToolbar"],
+    .stAppToolbar,
+    [data-testid="stDecoration"],
+    [data-testid="stHeaderActionElements"],
+    [data-testid="stStatusWidget"],
+    footer,
+    #manage-app-button,
+    [data-testid="manage-app-button"],
+    div[class*="viewerBadge"],
+    a[class*="viewerBadge"],
+    iframe[title="streamlit_badge"],
+    div[data-testid="stViewerBadge"],
+    .viewerBadge_container__1QSob,
+    .viewerBadge_link__1S137,
+    [data-testid="stAppViewBlockContainer"] > header {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Remove empty top margin/padding caused by hiding default header */
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+    }
+
     /* Clean, soft executive canvas - eliminates white glare while maintaining corporate precision */
     .stApp {
         background-color: #F4F6F9 !important;
@@ -724,11 +762,82 @@ with col_m4:
 
 st.write("")
 
-# Dynamic client-side clock script that synchronizes to user device time
+# Dynamic client-side clock script and Streamlit UI chrome remover
 components.html(
     """
     <script>
     (function() {
+        function removeStreamlitChrome() {
+            const selectors = [
+                '#MainMenu',
+                'header',
+                'header[data-testid="stHeader"]',
+                '[data-testid="stToolbar"]',
+                '.stAppToolbar',
+                '[data-testid="stDecoration"]',
+                '[data-testid="stHeaderActionElements"]',
+                'footer',
+                '#manage-app-button',
+                '[data-testid="manage-app-button"]',
+                'div[class*="viewerBadge"]',
+                'a[class*="viewerBadge"]',
+                'iframe[title="streamlit_badge"]',
+                '[data-testid="stStatusWidget"]',
+                '[data-testid="stViewerBadge"]',
+                '.viewerBadge_container__1QSob',
+                '.viewerBadge_link__1S137'
+            ];
+
+            const docs = [document];
+            try { if (window.parent && window.parent.document) docs.push(window.parent.document); } catch(e){}
+            try { if (window.top && window.top.document) docs.push(window.top.document); } catch(e){}
+
+            docs.forEach(doc => {
+                // 1. Inject permanent CSS in head if not present
+                if (!doc.getElementById('ftap-hide-chrome-style')) {
+                    try {
+                        const st = doc.createElement('style');
+                        st.id = 'ftap-hide-chrome-style';
+                        st.textContent = `
+                            #MainMenu, header, header[data-testid="stHeader"], [data-testid="stToolbar"],
+                            .stAppToolbar, [data-testid="stDecoration"], [data-testid="stHeaderActionElements"],
+                            footer, #manage-app-button, [data-testid="manage-app-button"],
+                            div[class*="viewerBadge"], a[class*="viewerBadge"], iframe[title="streamlit_badge"],
+                            [data-testid="stStatusWidget"], [data-testid="stViewerBadge"],
+                            .viewerBadge_container__1QSob, .viewerBadge_link__1S137 {
+                                display: none !important;
+                                visibility: hidden !important;
+                                opacity: 0 !important;
+                                pointer-events: none !important;
+                                height: 0 !important;
+                                width: 0 !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                                overflow: hidden !important;
+                            }
+                            .block-container {
+                                padding-top: 1.5rem !important;
+                            }
+                        `;
+                        doc.head.appendChild(st);
+                    } catch(e){}
+                }
+
+                // 2. Direct style removal on matching DOM elements
+                selectors.forEach(sel => {
+                    try {
+                        doc.querySelectorAll(sel).forEach(el => {
+                            el.style.setProperty('display', 'none', 'important');
+                            el.style.setProperty('visibility', 'hidden', 'important');
+                            el.style.setProperty('opacity', '0', 'important');
+                            el.style.setProperty('pointer-events', 'none', 'important');
+                            el.style.setProperty('height', '0px', 'important');
+                        });
+                    } catch(e){}
+                });
+            });
+        }
+
         function updateLiveClock() {
             try {
                 const now = new Date();
@@ -748,7 +857,10 @@ components.html(
                 }
             } catch (err) {}
         }
+
+        removeStreamlitChrome();
         updateLiveClock();
+        setInterval(removeStreamlitChrome, 300);
         setInterval(updateLiveClock, 1000);
     })();
     </script>
