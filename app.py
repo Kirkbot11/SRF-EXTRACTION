@@ -68,10 +68,16 @@ st.markdown("""
         overflow: hidden !important;
     }
 
-    /* Remove empty top margin/padding caused by hiding default header */
+    /* Maximize vertical canvas space - remove empty top margin/padding */
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 0.8rem !important;
         padding-bottom: 2rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        max-width: 98% !important;
+    }
+    div[data-testid="stAppViewContainer"] > section.main {
+        padding-top: 0 !important;
     }
 
     /* Clean, soft executive canvas - eliminates white glare while maintaining corporate precision */
@@ -440,26 +446,40 @@ st.markdown("""
     }
 
     /* ========================================================
-       SIDEBAR REFINED & NOTICEABLE ALIGNMENT
+       SIDEBAR REFINED & NOTICEABLE ALIGNMENT (FLUSH TO TOP)
        ======================================================== */
     [data-testid="stSidebar"] {
         background-color: #F8FAFC !important;
         border-right: 1px solid #E2E8F0 !important;
+        top: 0 !important;
+    }
+    section[data-testid="stSidebar"] > div:first-child {
+        padding-top: 0.25rem !important;
+    }
+    [data-testid="stSidebarHeader"] {
+        padding-top: 0.25rem !important;
+        padding-bottom: 0rem !important;
+        height: auto !important;
+        min-height: 0 !important;
     }
     [data-testid="stSidebarContent"] {
-        padding: 1.25rem 1rem !important;
+        padding: 0.35rem 0.85rem 1rem 0.85rem !important;
+    }
+    [data-testid="stSidebarUserContent"] {
+        padding-top: 0rem !important;
     }
 
     /* Branded Header Card in Sidebar */
     .sb-brand-card {
         background: #FFFFFF;
         border-radius: 14px;
-        padding: 18px 14px;
+        padding: 16px 14px;
         border: 1px solid #E2E8F0;
         border-top: 4px solid #C00000;
         box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
         text-align: center;
-        margin-bottom: 16px;
+        margin-top: 0 !important;
+        margin-bottom: 14px;
     }
     .sb-brand-logo {
         max-width: 175px;
@@ -816,7 +836,19 @@ components.html(
                                 overflow: hidden !important;
                             }
                             .block-container {
-                                padding-top: 1.5rem !important;
+                                padding-top: 0.8rem !important;
+                            }
+                            [data-testid="stSidebarHeader"] {
+                                padding-top: 0.25rem !important;
+                                padding-bottom: 0rem !important;
+                                height: auto !important;
+                                min-height: 0 !important;
+                            }
+                            [data-testid="stSidebarContent"] {
+                                padding-top: 0.35rem !important;
+                            }
+                            [data-testid="stSidebarUserContent"] {
+                                padding-top: 0rem !important;
                             }
                         `;
                         doc.head.appendChild(st);
