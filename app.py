@@ -567,20 +567,20 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
 
-    # 2. Extracted Fields Reference (1-to-1 Match with Python Code)
+    # 2. Extracted Fields Reference
     st.markdown(f"""
     <div class="sb-section-card">
         <div class="sb-card-title">
             <span>📋 Target Extraction</span>
-            <span class="sb-pill-count">{len(CORE_FIELDS)} Fields (1:1)</span>
+            <span class="sb-pill-count">{len(CORE_FIELDS)} Fields</span>
         </div>
         <p style="font-size: 12px; color: #64748B; margin: 0 0 6px 0; line-height: 1.35;">
-            Extracts the exact <b>{len(CORE_FIELDS)} core fields</b> 1-to-1 as specified in the Python extraction code.
+            Extracts the <b>{len(CORE_FIELDS)} core fields</b> as specified in the Python extraction code.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander(f"🔍 View all {len(CORE_FIELDS)} Fields (1:1 List)", expanded=False):
+    with st.expander(f"🔍 View all {len(CORE_FIELDS)} Fields", expanded=False):
         for idx, fld in enumerate(CORE_FIELDS, 1):
             st.markdown(f"<span class='field-tag'><b>{idx}.</b> {fld}</span>", unsafe_allow_html=True)
         st.caption("+ Source File (Excel filename tracking)")
@@ -643,9 +643,6 @@ st.markdown(f"""
                 <h1>Automated Site Request Form (SRF) Extractor</h1>
                 <p>Frontier Tower Associates Philippines • Operations & Engineering Infrastructure</p>
             </div>
-        </div>
-        <div class="ftap-badge-enterprise">
-            <span>🗼</span> {len(CORE_FIELDS)} Fields (1:1 Match)
         </div>
     </div>
 </div>
