@@ -1,28 +1,13 @@
 # Frontier Towers Philippines - Automated SRF Extractor & Excel Generator
 
-A lightweight, non-technical, browser-based enterprise application built for **Frontier Tower Associates Philippines (FTAP)** to extract the 14 core telecom fields from Site Request Form (SRF) PDFs directly into beautifully formatted Microsoft Excel spreadsheets matching `Site_Request_Summary.xlsx`.
+A lightweight, non-technical, browser-based enterprise application built for **Frontier Tower Associates Philippines (FTAP)** to extract all 101 standard fields from Telecom Site Request Form (SRF) PDFs directly into beautifully formatted Microsoft Excel spreadsheets.
 
 ## Features
 - **Official FTAP Brand Design**: Styled with Frontier Towers Philippines corporate crimson palette (`#C00000`), clear badges, and company header logo.
 - **Pure In-Browser Processing**: Uploaded PDFs are processed strictly in RAM—no files or temporary documents are stored on disk.
 - **Pre-Extraction Verification**: Review uploaded filenames and sizes before confirming extraction.
 - **Batch Appending & Late SRF Support**: Upload PDFs in multiple batches throughout the day. Late-arriving SRFs seamlessly append into the active dataset without losing previous records.
-- **14 Core Fields Extracted (1:1 with Python Code)**:
-  1. Smart Site ID
-  2. Smart Site Name
-  3. Site Proposal Type
-  4. Site Proposal Date
-  5. Tower Co. Name
-  6. Site Classification (Uptime SLA)
-  7. Site Type
-  8. Tower Type
-  9. Tower Height (m)
-  10. Building Height (m)
-  11. Latitude
-  12. Longitude
-  13. Site Address
-  14. Ref. No.
-  *(plus Source File tracking)*
+- **101 Fields Extracted (Clean Blank Returns)**: General site info, infrastructure details, dismantling & additional equipment, RF antenna specs, power metrics, transmission solution, and sequential approvals. Any unpopulated field returns clean blank cells.
 - **Direct Excel Download**: Instant export to a styled `.xlsx` file with FTAP brand-coded headers and custom column widths.
 - **High-Contrast, Modern UI**: Designed with 3D floating card elements, clear badges, and soft canvas to eliminate screen glare.
 

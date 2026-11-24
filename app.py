@@ -7,7 +7,6 @@ import pandas as pd
 from extractor import (
     extract_pdf_data, 
     generate_excel_bytes,
-    CORE_FIELDS,
     ALL_COLUMNS
 )
 
@@ -572,18 +571,17 @@ with st.sidebar:
     <div class="sb-section-card">
         <div class="sb-card-title">
             <span>📋 Target Extraction</span>
-            <span class="sb-pill-count">{len(CORE_FIELDS)} Fields</span>
+            <span class="sb-pill-count">{len(ALL_COLUMNS)} Fields</span>
         </div>
         <p style="font-size: 12px; color: #64748B; margin: 0 0 6px 0; line-height: 1.35;">
-            Extracts the <b>{len(CORE_FIELDS)} core fields</b> as specified in the Python extraction code.
+            Extracts all <b>{len(ALL_COLUMNS)} fields</b> matching the SRF specification. Blank cells are returned for unpopulated items.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander(f"🔍 View all {len(CORE_FIELDS)} Fields", expanded=False):
-        for idx, fld in enumerate(CORE_FIELDS, 1):
+    with st.expander(f"🔍 View all {len(ALL_COLUMNS)} Fields", expanded=False):
+        for idx, fld in enumerate(ALL_COLUMNS, 1):
             st.markdown(f"<span class='field-tag'><b>{idx}.</b> {fld}</span>", unsafe_allow_html=True)
-        st.caption("+ Source File (Excel filename tracking)")
 
     # 3. Step-by-Step Instructions Card (Highlighting Batch Appending & Tab Warning)
     st.markdown("""
@@ -603,7 +601,7 @@ with st.sidebar:
             <span class="sb-step-badge">2</span>
             <div class="sb-step-text">
                 <b>Verify & Merge</b>
-                <span>Confirm new files & extract 14 fields directly into the existing dataset.</span>
+                <span>Confirm new files & extract fields directly into the existing dataset.</span>
             </div>
         </div>
         <div class="sb-step-item">
@@ -673,8 +671,8 @@ with col_m2:
 with col_m3:
     st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-value" style="color: #C00000;">{len(CORE_FIELDS)}</div>
-        <div class="metric-label">📋 Extracted Fields</div>
+        <div class="metric-value" style="color: #C00000;">{len(ALL_COLUMNS)}</div>
+        <div class="metric-label">📋 Standard Fields</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -756,7 +754,7 @@ if uploaded_files:
     if unextracted_files:
         is_appending = current_count > 0
         action_verb = "Appending" if is_appending else "Extraction"
-        subtitle_note = f"Review the {len(unextracted_files)} new file{'s' if len(unextracted_files) > 1 else ''} below. When ready, click <b>Proceed with Appending</b> to merge them with your {current_count} existing record{'s' if current_count > 1 else ''} in memory." if is_appending else f"Review the uploaded files below. When ready, click <b>Proceed with Extraction</b> to extract all 14 core fields into memory."
+        subtitle_note = f"Review the {len(unextracted_files)} new file{'s' if len(unextracted_files) > 1 else ''} below. When ready, click <b>Proceed with Appending</b> to merge them with your {current_count} existing record{'s' if current_count > 1 else ''} in memory." if is_appending else f"Review the uploaded files below. When ready, click <b>Proceed with Extraction</b> to extract all {len(ALL_COLUMNS)} fields into memory (blank cells returned for unpopulated items)."
 
         st.markdown(f"""
         <div class="verify-card">
@@ -802,7 +800,7 @@ if uploaded_files:
                 st.rerun()
 
         if proceed_clicked:
-            with st.spinner(f"Extracting and appending 14 core fields from {len(unextracted_files)} PDF(s)..."):
+            with st.spinner(f"Extracting all {len(ALL_COLUMNS)} fields from {len(unextracted_files)} PDF(s)..."):
                 for uf in unextracted_files:
                     bytes_data = uf.getvalue()
                     data = extract_pdf_data(bytes_data, filename=uf.name)
