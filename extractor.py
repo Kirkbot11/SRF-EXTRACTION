@@ -157,17 +157,27 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
             blocks = page.get_text("blocks")
             for b in blocks:
                 text = b[4].strip()
-                # 1. Label and value in the same block (e.g. "RF Antenna Weight:\n64kg")
-                m = re.search(label_pat + r":?\s*\n\s*([^\r\n]+)", text, re.IGNORECASE)
-                if m:
-                    val = clean_val(m.group(1))
-                    if val:
-                        return val
-
-                # 2. Label in block b, value in an adjacent table cell to the right on the same row
+                if not text:
+                    continue
                 if re.search(label_pat, text, re.IGNORECASE):
+                    # 1a. Stacked in same block (label line followed by value line)
+                    # Notice: [^:\n]* allows units/parenthetical text on label line (e.g. ", AGL (m):")
+                    m_stack = re.search(label_pat + r"[^:\n]*:?\s*\n\s*([^\r\n]+)", text, re.IGNORECASE)
+                    if m_stack:
+                        val = clean_val(m_stack.group(1))
+                        if val:
+                            return val
+
+                    # 1b. Inline in same block (label: value on same line)
+                    m_inline = re.search(label_pat + r"[^:\n]*:\s*([^\r\n]+)", text, re.IGNORECASE)
+                    if m_inline:
+                        val = clean_val(m_inline.group(1))
+                        if val:
+                            return val
+
+                    # 2. Label in block b, value in an adjacent table cell to the right on the same row
                     y0, y1, x1 = b[1], b[3], b[2]
-                    cand = [ob for ob in blocks if ob != b and ob[0] >= x1 - 10 and abs(ob[1] - y0) <= y_tol]
+                    cand = [ob for ob in blocks if ob != b and ob[0] >= x1 - 15 and abs(ob[1] - y0) <= y_tol]
                     if cand:
                         cand.sort(key=lambda c: c[0])
                         val = clean_val(cand[0][4].strip().replace("\n", " "))
@@ -175,7 +185,7 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
                             return val
 
         # 3. Fallback to regex across full_text with clean_val validation
-        m_reg = re.search(label_pat + r":?\s*\n?\s*([^\r\n]+)", full_text, re.IGNORECASE)
+        m_reg = re.search(label_pat + r"[^:\n]*:?\s*\n?\s*([^\r\n]+)", full_text, re.IGNORECASE)
         if m_reg:
             val = clean_val(m_reg.group(1))
             if val:
@@ -183,11 +193,12 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
         return ""
 
     row["Existing Loadings Description"] = get_field_aligned_value(r"Existing\s+Loadings")
-    row["RF Antenna Dimension MM"] = get_field_aligned_value(r"RF\s+Antenna\s+Dimension")
-    row["RF Antenna Number Of Antennas"] = get_field_aligned_value(r"No\.\s+of\s+RF\s+Antennas")
-    row["RF Antenna Azimuth"] = get_field_aligned_value(r"RF\s+Antenna\s+Azimuth")
-    row["RF Antenna Center Line Height AGL M"] = get_field_aligned_value(r"RF\s+Antenna\s+Center\s+Line\s+Height")
-    row["RF Antenna Weight"] = get_field_aligned_value(r"RF\s+Antenna\s+Weight")
+    row["RF Antenna Dimension MM"] = get_field_aligned_value(r"RF\s+Ann?ten?na\s+Dimension")
+    row["RF Antenna Number Of Antennas"] = get_field_aligned_value(r"No\.\s+of\s+RF\s+Ann?ten?nas?")
+    row["RF Antenna Azimuth"] = get_field_aligned_value(r"RF\s+Ann?ten?na\s+Azimuth")
+    row["RF Antenna Center Line Height AGL M"] = get_field_aligned_value(r"RF\s+Ann?ten?na\s+Center\s+Line\s+Height")
+    row["RF Antenna Weight"] = get_field_aligned_value(r"RF\s+Ann?ten?na\s+Weight")
+    row["RRH RRU Number"] = get_field_aligned_value(r"No\.\s+of\s+RRH\s*/\s*RRU")
 
     # Standard Regex Patterns for other fields
     patterns = {
@@ -207,7 +218,6 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
         "Dismantling Total Weight KG": r"Weight of Antenna/Equipment:\s*\n?\s*([^\r\n]+)",
         "Smart Equipment Housing Type": r"SMART Equipment Housing Type:\s*\n?\s*([^\r\n]+)",
         "BTS BBU Number And U Space": r"No\. of BTS/BBU & U Space:\s*\n?\s*([^\r\n]+)",
-        "RRH RRU Number": r"No\. of RRH/RRU:\s*\n?\s*([^\r\n]+)",
         "Transmission Solution": r"Transmission Solution \(FOC or MW Radio\):\s*\n?\s*([^\r\n]+)",
         "MW Radio Antenna Diameter M": r"MW Radio Antenna Diameter \(m\):\s*\n?\s*([^\r\n]+)",
         "MW Radio Antenna Height AGL M": r"MW Radio Antenna Height, AGL \(m\):\s*\n?\s*([^\r\n]+)",
@@ -228,9 +238,16 @@ def extract_pdf_data(pdf_source, filename="Unknown.pdf"):
     }
 
     for k, pat in patterns.items():
-        m = re.search(pat, full_text, re.IGNORECASE)
-        if m:
-            row[k] = clean_val(m.group(1), field_name=k)
+        if not row[k]:
+            m = re.search(pat, full_text, re.IGNORECASE)
+            if m:
+                row[k] = clean_val(m.group(1), field_name=k)
+
+    # Spatial alignment fallback for structured fields if patterns regex missed them
+    if not row["BTS BBU Number And U Space"]:
+        row["BTS BBU Number And U Space"] = get_field_aligned_value(r"No\.\s+of\s+BTS\s*/\s*BBU\s*&\s*U\s+Space")
+    if not row["Smart Equipment Housing Type"]:
+        row["Smart Equipment Housing Type"] = get_field_aligned_value(r"SMART\s+Equipment\s+Housing\s+Type")
 
     # Clean RF Antenna Weight if it accidentally caught Existing Loading text
     if row["RF Antenna Weight"] == row["Existing Loadings Description"]:
